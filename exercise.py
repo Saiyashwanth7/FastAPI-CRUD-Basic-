@@ -29,11 +29,14 @@ async def books_read():
 async def add_book(b=Body()):
     Books.append(b)
 
+#
 @app.put('/books/update_book')
 async def update_book(book_details=Body()):
     for i in range(len(Books)):
         if Books[i].get('title').casefold()==book_details.get('title').casefold():
             Books[i]=book_details
+            return 'updated'
+        
 
 #deletion using query parameter
 @app.delete('/books/delete_book/')
