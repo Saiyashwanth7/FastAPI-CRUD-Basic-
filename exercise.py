@@ -41,7 +41,8 @@ async def delete_book(book_del:str):
     for i in range(len(Books)):
         if Books[i].get('title').casefold()==book_del.casefold():
             Books.pop(i)
-            break 
+            return f'{book_del} is deleted'
+    return f"{book_del} doesn't exist"
 
 #path parameter example
 @app.get('/books/{book_req}')
