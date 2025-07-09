@@ -38,7 +38,7 @@ books = [
 
 @app.get('/books')
 async def get_books():
-    return Books
+    return books
 
 @app.post('/create-books')
 async def create_books(new_book=Body()):
