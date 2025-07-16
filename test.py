@@ -128,7 +128,7 @@ async def book_by_title(book_id: int = Path(gt=0)):
     return f" {book_id} is invalid "
 
 
-@app.get("/books/")
+@app.get("/books/by-year")
 async def read_by_year(year: int = Query(gt=1700, le=2025)):
     req_books = []
     for i in library:
