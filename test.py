@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Path, Query
 from pydantic import BaseModel, Field
 from typing import Annotated
 import datetime
@@ -108,7 +108,7 @@ async def read_books():
     return library
 
 
-@app.post("/books/create-book")
+@app.post("/books")
 async def create_book(new_book: Books):
     temp_id = 0
     if len(library) == 0:
@@ -120,19 +120,16 @@ async def create_book(new_book: Books):
     return f"{new_book.title} Book added succesfully!"
 
 
-@app.get("/books/book-title/{book_name}")
-async def book_by_title(book_name):
-    req_book = []
+@app.get("/books/{book_id}")
+async def book_by_title(book_id: int = Path(gt=0)):
     for book in library:
-        if book.title.casefold() == book_name.casefold():
-            req_book.append(book)
-    return (
-        req_book if len(req_book) > 0 else f"{book_name} is not in the current library"
-    )
+        if book.id == book_id:
+            return {book}
+    return f" {book_id} is invalid "
 
 
-@app.get("/books/published-year/{year}")
-async def read_by_year(year: int):
+@app.get("/books/")
+async def read_by_year(year: int = Query(gt=1700, le=2025)):
     req_books = []
     for i in library:
         if i.published_year == year:
@@ -144,8 +141,8 @@ async def read_by_year(year: int):
     )
 
 
-@app.get("/books/")
-async def read_by_Rating(filter_rating: float):
+@app.get("/books/ratings/")
+async def read_by_Rating(filter_rating: float = Query(ge=0, le=5)):
     req_books = []
     for book in library:
         if book.rating >= filter_rating:
@@ -153,10 +150,18 @@ async def read_by_Rating(filter_rating: float):
     return req_books if len(req_books) > 0 else {"message": "Books not found"}
 
 
-@app.put("/books/update-books")
+@app.put("/books")
 async def update_book(updated_details: Books):
     for i in range(len(library)):
         if library[i].title.casefold() == updated_details.title.casefold():
             library[i] = Book_Id(id=library[i].id, **updated_details.model_dump())
             return {"message": "Details updated"}
     return {"message": "Invalid book title"}
+
+
+@app.delete("/books/")
+async def delete_book(book_id: int = Query(gt=0)):
+    for i in range(len(library)):
+        if library[i].id == book_id:
+            return library.pop(i)
+    return f"{book_id} is invalid"
