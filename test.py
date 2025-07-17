@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path, Query
+from fastapi import FastAPI, Path, Query ,HTTPException
 from pydantic import BaseModel, Field
 from typing import Annotated
 import datetime
@@ -110,7 +110,6 @@ async def read_books():
 
 @app.post("/books")
 async def create_book(new_book: Books):
-    temp_id = 0
     if len(library) == 0:
         temp_id = 0
     else:
@@ -121,11 +120,15 @@ async def create_book(new_book: Books):
 
 
 @app.get("/books/{book_id}")
-async def book_by_title(book_id: int = Path(gt=0)):
+async def book_by_id(book_id: int = Path(gt=0)):
+    flag=False
     for book in library:
         if book.id == book_id:
+            flag=True
             return {book}
-    return f" {book_id} is invalid "
+    if not flag:
+        raise HTTPException(status_code=404,detail='Book ID is invalid')
+    
 
 
 @app.get("/books/by-year")
@@ -152,16 +155,22 @@ async def read_by_Rating(filter_rating: float = Query(ge=0, le=5)):
 
 @app.put("/books")
 async def update_book(updated_details: Books):
+    flag=False
     for i in range(len(library)):
         if library[i].title.casefold() == updated_details.title.casefold():
             library[i] = Book_Id(id=library[i].id, **updated_details.model_dump())
-            return {"message": "Details updated"}
-    return {"message": "Invalid book title"}
+            flag=True
+    if not flag:
+        raise HTTPException(status_code=404,detail="The Book doesn't exist")
 
 
 @app.delete("/books/")
 async def delete_book(book_id: int = Query(gt=0)):
+    flag=False
     for i in range(len(library)):
         if library[i].id == book_id:
-            return library.pop(i)
-    return f"{book_id} is invalid"
+            library.pop(i)
+            flag=True
+    if not flag:
+        raise HTTPException(status_code=404, detail="The Book ID is invalid")
+    
