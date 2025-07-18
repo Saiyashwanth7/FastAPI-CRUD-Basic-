@@ -2,6 +2,7 @@ from fastapi import FastAPI, Path, Query ,HTTPException
 from pydantic import BaseModel, Field
 from typing import Annotated
 import datetime
+from starlette import status
 
 
 app = FastAPI()
@@ -103,12 +104,12 @@ library = [
 ]
 
 
-@app.get("/books")
+@app.get("/books",status_code=status.HTTP_200_OK)
 async def read_books():
     return library
 
 
-@app.post("/books")
+@app.post("/books",status_code=status.HTTP_201_CREATED)
 async def create_book(new_book: Books):
     if len(library) == 0:
         temp_id = 0
@@ -119,7 +120,7 @@ async def create_book(new_book: Books):
     return f"{new_book.title} Book added succesfully!"
 
 
-@app.get("/books/{book_id}")
+@app.get("/books/{book_id}",status_code=status.HTTP_200_OK)
 async def book_by_id(book_id: int = Path(gt=0)):
     flag=False
     for book in library:
@@ -131,7 +132,7 @@ async def book_by_id(book_id: int = Path(gt=0)):
     
 
 
-@app.get("/books/by-year")
+@app.get("/books/by-year",status_code=status.HTTP_200_OK)
 async def read_by_year(year: int = Query(gt=1700, le=2025)):
     req_books = []
     for i in library:
@@ -144,7 +145,7 @@ async def read_by_year(year: int = Query(gt=1700, le=2025)):
     )
 
 
-@app.get("/books/ratings/")
+@app.get("/books/ratings/",status_code=status.HTTP_200_OK)
 async def read_by_Rating(filter_rating: float = Query(ge=0, le=5)):
     req_books = []
     for book in library:
@@ -153,7 +154,7 @@ async def read_by_Rating(filter_rating: float = Query(ge=0, le=5)):
     return req_books if len(req_books) > 0 else {"message": "Books not found"}
 
 
-@app.put("/books")
+@app.put("/books",status_code=status.HTTP_204_NO_CONTENT)
 async def update_book(updated_details: Books):
     flag=False
     for i in range(len(library)):
@@ -164,13 +165,16 @@ async def update_book(updated_details: Books):
         raise HTTPException(status_code=404,detail="The Book doesn't exist")
 
 
-@app.delete("/books/")
+@app.delete("/books/",status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(book_id: int = Query(gt=0)):
     flag=False
+    if book_id not in set([book.id for book in library ]):
+        raise HTTPException(status_code=404, detail="The Book ID is invalid")
     for i in range(len(library)):
         if library[i].id == book_id:
             library.pop(i)
             flag=True
+            break
     if not flag:
         raise HTTPException(status_code=404, detail="The Book ID is invalid")
     
